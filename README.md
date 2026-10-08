@@ -9,40 +9,75 @@
 ![Docker](https://img.shields.io/badge/Docker-Engine%20API-2496ED?logo=docker)
 ![Vite](https://img.shields.io/badge/Vite-Build-646CFF?logo=vite)
 
-**ContainerScope** is a high-performance, ultra-sleek, real-time Docker intelligence dashboard and container management platform built with ASP.NET Core 8 Web API, React 19, TypeScript, and modern dark-mode glassmorphic aesthetics.
+**ContainerScope** is a high-performance, ultra-sleek, real-time Docker intelligence dashboard and container fleet management platform built with ASP.NET Core 8 Web API, React 19, TypeScript, and modern cyberpunk-graphite dark mode aesthetics.
+
+<br />
+
+<img src="docs/screenshots/dashboard_preview.jpg" alt="ContainerScope Dashboard Preview" width="100%" style="border-radius: 12px; box-shadow: 0 12px 32px rgba(0,0,0,0.6);" />
 
 </div>
 
 ---
 
-## ✨ Key Features
+## 🌟 Highlights
 
-### 1. 📊 Real-Time Fleet Intelligence & Metrics
-- **Live Fleet Health Bar**: Visual breakdown of running vs. stopped containers.
-- **Resource Analytics**: Aggregate disk utilization across images, total named volumes, and virtual network scopes.
-- **Auto-Sync & Manual Refresh**: Configurable background polling intervals (`5s`, `10s`, `30s`, or manual).
+- ⚡ **Zero-Lag Docker Engine Interface:** Direct asynchronous connection to the Docker daemon socket (`npipe` on Windows, `/var/run/docker.sock` on Linux/macOS).
+- 📊 **Real-Time Fleet Health & KPI Cards:** Live monitoring of active vs. stopped containers, aggregated repository image sizes, and persistent storage volumes.
+- 💻 **Live Terminal Log Streaming:** High-performance dark console viewer with auto-scroll, search filters, tail selectors, clipboard copy, and `.txt` log download.
+- 📈 **Dynamic CPU & Memory Gauges:** Instant calculations for CPU utilization percentage, RAM limits vs. current consumption, Network I/O (RX/TX), and active PID counts.
+- 🚀 **One-Click Container Lifecycle:** Start, stop, restart, and remove containers with toast notification feedback.
+- 📦 **Docker Compose Stacks:** Automatic project stack discovery based on container labels.
 
-### 2. ⚡ Container Lifecycle Management
-- **Instant Controls**: Start, Stop, Restart, and Remove containers directly from tables or detail modals.
-- **Optimistic State Updates & Toast Alerts**: Instant visual feedback for container operations.
+---
 
-### 3. 📈 Real-Time CPU & RAM Utilization
-- **Live Performance Gauges**: Real-time CPU percentage calculations and RAM memory limits vs. active usage.
-- **Network I/O & Process Monitoring**: Monitor RX/TX bandwidth metrics and active PID count.
+## 📸 Screenshots & Showcase
+
+### 1. Main Infrastructure Dashboard
+> Overview of running containers, storage distribution, fleet runtime ratio, and interactive container data table.
+
+<div align="center">
+  <img src="docs/screenshots/dashboard_preview.jpg" alt="Main Dashboard Overview" width="95%" />
+</div>
+
+<br />
+
+### 2. Deep Container Inspection & Live Log Streamer
+> Multi-tab container inspector with real-time CPU/RAM meters, live log viewer, environment variable registry, port bindings, and volume mounts.
+
+<div align="center">
+  <img src="docs/screenshots/container_modal_preview.jpg" alt="Container Inspection Modal" width="95%" />
+</div>
+
+---
+
+## ✨ Features Breakdown
+
+### 1. 📊 Real-Time Fleet Intelligence
+- **Fleet Health Bar:** Visual percentage ratio of running vs. dormant containers.
+- **Resource Inventory:** Total images, persistent named volumes, and virtual network topology.
+- **Auto-Sync:** Background polling at customizable intervals (`5s`, `10s`, `30s`, or manual).
+
+### 2. ⚡ Container Operations & Actions
+- **Quick Controls:** Start, stop, restart, or remove containers directly from the table or modal.
+- **Toast Notifications:** Instant visual feedback on every action.
+
+### 3. 📈 CPU / RAM Performance Metrics
+- **Live Performance Gauges:** Accurate CPU percentage and RAM memory consumption graphs.
+- **Network & Process Stats:** Real-time RX/TX network traffic and active process count (PIDs).
 
 ### 4. 💻 Live Terminal Log Viewer
-- **Console Stream**: Real-time container stdout/stderr log inspector.
-- **Log Management**: Auto-scroll toggle, keyword filter/search, configurable line tailing (`50`, `150`, `300`, `1000`), 1-click clipboard copy, and `.txt` log download.
+- **Log Stream:** Real-time container stdout/stderr log inspector.
+- **Log Tools:** Keyword search, configurable line tailing (`50`, `150`, `300`, `1000`), copy, and log export.
 
-### 5. 📦 Docker Compose Stacks Orchestration
-- **Stack Grouping**: Automatically identifies multi-container compose projects from container labels (`com.docker.compose.project`).
-- **Service Status**: Inspect individual compose services, images, and port mappings per stack.
+### 5. 📦 Docker Compose Orchestration
+- **Stack Discovery:** Automatically groups containers belonging to the same Compose project (`com.docker.compose.project`).
+- **Service Status:** View service status, port mappings, and working directory context.
 
 ### 6. 🔍 Deep Resource Inspection
-- **Containers**: Environment variables, port bindings, volume mounts, restart policies, exit codes, and network IPAM details.
-- **Images**: Repository tags, formatted byte sizes, and ready-to-use `docker run` commands.
-- **Volumes**: Volume drivers, host mountpoint paths with quick copy buttons.
-- **Networks**: Virtual bridges, host configurations, and overlay scopes.
+- **Containers:** Environment variables, port bindings, volume mounts, restart policies, exit codes, and network IPAM details.
+- **Images:** Repository tags, formatted byte sizes, and ready-to-use `docker run` commands.
+- **Volumes:** Volume drivers, host mountpoint paths with quick copy buttons.
+- **Networks:** Virtual bridges, host configurations, and overlay scopes.
 
 ---
 
@@ -65,6 +100,8 @@ ContainerScope/
 │   │   └── types/              # Docker TypeScript definitions
 │   ├── nginx.conf              # Nginx reverse proxy configuration
 │   └── Dockerfile              # Multi-stage production container
+├── docs/
+│   └── screenshots/            # Visual previews and assets
 └── docker-compose.yml          # One-click deployment with Docker socket mount
 ```
 
@@ -74,20 +111,20 @@ ContainerScope/
 
 ### Option 1: Run with Docker Compose (Recommended)
 
-Run the entire application in seconds with Docker Compose:
+Run the entire platform with a single command:
 
 ```bash
-# Clone the repository
+# 1. Clone the repository
 git clone https://github.com/ismaildundar42/Docker-Management-Dashboard.git
 cd Docker-Management-Dashboard
 
-# Start the stack
+# 2. Start the stack
 docker compose up -d --build
 ```
 
-Access the dashboard in your browser:
+Access the application:
 - **Frontend Dashboard:** [http://localhost:3000](http://localhost:3000)
-- **Backend API:** [http://localhost:5000/swagger](http://localhost:5000/swagger)
+- **Backend API Swagger:** [http://localhost:5000/swagger](http://localhost:5000/swagger)
 
 ---
 
@@ -111,11 +148,11 @@ cd frontend
 npm install
 npm run dev
 ```
-*Frontend dev server will start at `http://localhost:5173` with hot module replacement.*
+*Frontend dev server will start at `http://localhost:5173`.*
 
 ---
 
-## 📡 API Reference
+## 📡 REST API Reference
 
 | Endpoint | Method | Description |
 | :--- | :--- | :--- |
@@ -129,8 +166,11 @@ npm run dev
 | `/api/docker/containers/{id}/stats` | `GET` | Real-time CPU%, RAM, Network I/O stats |
 | `/api/docker/compose/stacks` | `GET` | List grouped Docker Compose stacks |
 | `/api/docker/images` | `GET` | List all local Docker images |
+| `/api/docker/images/{id}/inspect` | `GET` | Deep image inspection |
 | `/api/docker/volumes` | `GET` | List persistent Docker volumes |
+| `/api/docker/volumes/{name}/inspect` | `GET` | Deep volume inspection |
 | `/api/docker/networks` | `GET` | List virtual Docker networks |
+| `/api/docker/networks/{id}/inspect` | `GET` | Deep network inspection |
 
 ---
 
