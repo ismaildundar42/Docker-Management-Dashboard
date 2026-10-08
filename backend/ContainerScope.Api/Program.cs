@@ -1,19 +1,44 @@
 using ContainerScope.Api.Services;
 using Docker.DotNet;
+using System.Runtime.InteropServices;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// Configure Cross-Platform Docker Client Configuration
+static Uri GetDockerUri()
+{
+    var customHost = Environment.GetEnvironmentVariable("DOCKER_HOST");
+    if (!string.IsNullOrWhiteSpace(customHost))
+    {
+        return new Uri(customHost);
+    }
+
+    if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+    {
+        return new Uri("npipe://./pipe/docker_engine");
+    }
+
+    return new Uri("unix:///var/run/docker.sock");
+}
+
 builder.Services.AddSingleton(
-    new DockerClientConfiguration(
-        new Uri("npipe://./pipe/docker_engine"))
+    new DockerClientConfiguration(GetDockerUri())
         .CreateClient());
 
 builder.Services.AddScoped<IDockerService, DockerService>();
 
+// CORS for Vite local dev
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+    });
+});
 
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -26,10 +51,9 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseCors("AllowAll");
 app.UseHttpsRedirection();
-
 app.UseAuthorization();
-
 app.MapControllers();
 
 app.Run();

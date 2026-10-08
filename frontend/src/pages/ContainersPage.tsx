@@ -3,25 +3,75 @@ import {
     Box,
     Copy,
     Check,
+    Play,
+    Square,
+    RotateCw,
+    Trash2,
 } from "lucide-react";
 import type { DockerContainer } from "../types/docker";
+import { dockerApi } from "../services/dockerApi";
+import { useToast } from "../context/ToastContext";
 import { formatDate, truncate } from "../utils/formatters";
 
 interface Props {
     containers: DockerContainer[];
     onSelectContainer: (container: DockerContainer) => void;
+    onRefreshList: () => void;
     searchQuery: string;
 }
 
-export default function ContainersPage({ containers, onSelectContainer, searchQuery }: Props) {
+export default function ContainersPage({
+    containers,
+    onSelectContainer,
+    onRefreshList,
+    searchQuery,
+}: Props) {
+    const { showToast } = useToast();
     const [filterState, setFilterState] = useState<"all" | "running" | "stopped">("all");
     const [copiedId, setCopiedId] = useState<string | null>(null);
+    const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
 
     const handleCopy = (e: React.MouseEvent, text: string) => {
         e.stopPropagation();
         navigator.clipboard.writeText(text);
         setCopiedId(text);
+        showToast("info", "Copied to clipboard", text);
         setTimeout(() => setCopiedId(null), 2000);
+    };
+
+    const handleQuickAction = async (
+        e: React.MouseEvent,
+        container: DockerContainer,
+        action: "start" | "stop" | "restart" | "remove"
+    ) => {
+        e.stopPropagation();
+        setActionLoadingId(`${container.id}-${action}`);
+
+        try {
+            if (action === "start") {
+                await dockerApi.startContainer(container.id);
+                showToast("success", "Container Started", `${container.name} is now online.`);
+            } else if (action === "stop") {
+                await dockerApi.stopContainer(container.id);
+                showToast("warning", "Container Stopped", `${container.name} was stopped.`);
+            } else if (action === "restart") {
+                await dockerApi.restartContainer(container.id);
+                showToast("success", "Container Restarted", `${container.name} restarted.`);
+            } else if (action === "remove") {
+                if (window.confirm(`Delete container ${container.name}?`)) {
+                    await dockerApi.removeContainer(container.id, true);
+                    showToast("error", "Container Removed", `${container.name} was deleted.`);
+                } else {
+                    setActionLoadingId(null);
+                    return;
+                }
+            }
+            onRefreshList();
+        } catch (err) {
+            showToast("error", `Failed to ${action} container`, err instanceof Error ? err.message : "Error");
+        } finally {
+            setActionLoadingId(null);
+        }
     };
 
     const runningCount = containers.filter((c) => c.state === "running").length;
@@ -53,7 +103,7 @@ export default function ContainersPage({ containers, onSelectContainer, searchQu
                     </div>
                     <h1 className="page-title">Containers Fleet</h1>
                     <p className="page-subtitle">
-                        Inspect, monitor and manage active and dormant container instances
+                        Inspect, start, stop, restart and manage active container instances
                     </p>
                 </div>
 
@@ -88,7 +138,6 @@ export default function ContainersPage({ containers, onSelectContainer, searchQu
                                 <th>ID</th>
                                 <th>IMAGE</th>
                                 <th>STATE</th>
-                                <th>STATUS</th>
                                 <th>PORTS</th>
                                 <th>CREATED</th>
                                 <th style={{ textAlign: "right" }}>ACTIONS</th>
@@ -97,6 +146,8 @@ export default function ContainersPage({ containers, onSelectContainer, searchQu
                         <tbody>
                             {filtered.map((container) => {
                                 const isRunning = container.state === "running";
+                                const isBusy = actionLoadingId?.startsWith(container.id);
+
                                 return (
                                     <tr
                                         key={container.id}
@@ -131,7 +182,7 @@ export default function ContainersPage({ containers, onSelectContainer, searchQu
                                         </td>
                                         <td>
                                             <span className="image-badge mono" title={container.image}>
-                                                {truncate(container.image, 26)}
+                                                {truncate(container.image, 24)}
                                             </span>
                                         </td>
                                         <td>
@@ -141,14 +192,11 @@ export default function ContainersPage({ containers, onSelectContainer, searchQu
                                             </span>
                                         </td>
                                         <td>
-                                            <span className="status-text">{container.status}</span>
-                                        </td>
-                                        <td>
                                             {container.ports && container.ports.length > 0 ? (
                                                 <div className="ports-preview">
                                                     {container.ports.map((p, idx) => (
                                                         <span key={idx} className="port-tag mono">
-                                                            {p.publicPort ? `${p.publicPort}:` : ""}{p.privatePort}/{p.type}
+                                                            {p.publicPort ? `${p.publicPort}:` : ""}{p.privatePort}
                                                         </span>
                                                     ))}
                                                 </div>
@@ -160,22 +208,73 @@ export default function ContainersPage({ containers, onSelectContainer, searchQu
                                             <span className="text-muted text-sm">{formatDate(container.created)}</span>
                                         </td>
                                         <td style={{ textAlign: "right" }}>
-                                            <button
-                                                className="btn-inspect"
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    onSelectContainer(container);
-                                                }}
-                                            >
-                                                Inspect
-                                            </button>
+                                            <div className="row-action-buttons">
+                                                {!isRunning ? (
+                                                    <button
+                                                        className="btn-icon-action btn-green"
+                                                        disabled={isBusy}
+                                                        onClick={(e) => void handleQuickAction(e, container, "start")}
+                                                        title="Start container"
+                                                    >
+                                                        {actionLoadingId === `${container.id}-start` ? (
+                                                            <RotateCw size={13} className="spin-icon" />
+                                                        ) : (
+                                                            <Play size={13} />
+                                                        )}
+                                                    </button>
+                                                ) : (
+                                                    <button
+                                                        className="btn-icon-action btn-orange"
+                                                        disabled={isBusy}
+                                                        onClick={(e) => void handleQuickAction(e, container, "stop")}
+                                                        title="Stop container"
+                                                    >
+                                                        {actionLoadingId === `${container.id}-stop` ? (
+                                                            <RotateCw size={13} className="spin-icon" />
+                                                        ) : (
+                                                            <Square size={13} />
+                                                        )}
+                                                    </button>
+                                                )}
+
+                                                <button
+                                                    className="btn-icon-action btn-blue"
+                                                    disabled={isBusy}
+                                                    onClick={(e) => void handleQuickAction(e, container, "restart")}
+                                                    title="Restart container"
+                                                >
+                                                    <RotateCw
+                                                        size={13}
+                                                        className={actionLoadingId === `${container.id}-restart` ? "spin-icon" : ""}
+                                                    />
+                                                </button>
+
+                                                <button
+                                                    className="btn-icon-action btn-red"
+                                                    disabled={isBusy}
+                                                    onClick={(e) => void handleQuickAction(e, container, "remove")}
+                                                    title="Remove container"
+                                                >
+                                                    <Trash2 size={13} />
+                                                </button>
+
+                                                <button
+                                                    className="btn-inspect"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        onSelectContainer(container);
+                                                    }}
+                                                >
+                                                    Inspect
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 );
                             })}
                             {filtered.length === 0 && (
                                 <tr>
-                                    <td colSpan={8}>
+                                    <td colSpan={7}>
                                         <div className="empty-state">
                                             <Box size={32} className="text-muted" />
                                             <p className="empty-title">No containers match the current filter</p>

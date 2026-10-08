@@ -27,6 +27,7 @@ export default function Topbar({
     const pageLabels: Record<Page, string> = {
         dashboard: "Overview & Metrics",
         containers: "Containers Fleet",
+        compose: "Compose Stacks",
         images: "Images Library",
         volumes: "Storage Volumes",
         networks: "Virtual Networks",

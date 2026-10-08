@@ -3,31 +3,35 @@ import Sidebar, { type Page } from "./components/layout/Sidebar";
 import Topbar from "./components/layout/Topbar";
 import Dashboard from "./pages/Dashboard";
 import ContainersPage from "./pages/ContainersPage";
+import ComposePage from "./pages/ComposePage";
 import ImagesPage from "./pages/ImagesPage";
 import VolumesPage from "./pages/VolumesPage";
 import NetworksPage from "./pages/NetworksPage";
 import ContainerModal from "./components/dashboard/ContainerModal";
+import { ToastProvider } from "./context/ToastContext";
 import { dockerApi } from "./services/dockerApi";
 import type {
     DockerContainer,
     DockerImage,
     DockerVolume,
     DockerNetwork,
+    ComposeStack,
 } from "./types/docker";
 import "./App.css";
 
-function App() {
+function AppContent() {
     const [page, setPage] = useState<Page>("dashboard");
     const [containers, setContainers] = useState<DockerContainer[]>([]);
     const [images, setImages] = useState<DockerImage[]>([]);
     const [volumes, setVolumes] = useState<DockerVolume[]>([]);
     const [networks, setNetworks] = useState<DockerNetwork[]>([]);
+    const [composeStacks, setComposeStacks] = useState<ComposeStack[]>([]);
     
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const [error, setError] = useState("");
     const [searchQuery, setSearchQuery] = useState("");
-    const [autoRefreshInterval, setAutoRefreshInterval] = useState<number>(10000); // default 10s
+    const [autoRefreshInterval, setAutoRefreshInterval] = useState<number>(10000); // 10s default
     const [selectedContainer, setSelectedContainer] = useState<DockerContainer | null>(null);
 
     const loadData = useCallback(async (refresh = false) => {
@@ -35,17 +39,19 @@ function App() {
         else setLoading(true);
 
         try {
-            const [c, i, v, n] = await Promise.all([
+            const [c, i, v, n, stacks] = await Promise.all([
                 dockerApi.containers(),
                 dockerApi.images(),
                 dockerApi.volumes(),
                 dockerApi.networks(),
+                dockerApi.composeStacks().catch(() => []),
             ]);
 
             setContainers(c || []);
             setImages(i || []);
             setVolumes(v || []);
             setNetworks(n || []);
+            setComposeStacks(stacks || []);
             setError("");
         } catch (err) {
             setError(err instanceof Error ? err.message : "Failed to connect to Docker API");
@@ -79,6 +85,7 @@ function App() {
                 counts={{
                     containers: containers.length,
                     runningContainers: runningContainersCount,
+                    composeStacks: composeStacks.length,
                     images: images.length,
                     volumes: volumes.length,
                     networks: networks.length,
@@ -124,7 +131,13 @@ function App() {
                         <ContainersPage
                             containers={containers}
                             onSelectContainer={setSelectedContainer}
+                            onRefreshList={() => void loadData(true)}
                             searchQuery={searchQuery}
+                        />
+                    ) : page === "compose" ? (
+                        <ComposePage
+                            searchQuery={searchQuery}
+                            onSelectContainer={setSelectedContainer}
                         />
                     ) : page === "images" ? (
                         <ImagesPage
@@ -149,9 +162,16 @@ function App() {
             <ContainerModal
                 container={selectedContainer}
                 onClose={() => setSelectedContainer(null)}
+                onRefreshList={() => void loadData(true)}
             />
         </div>
     );
 }
 
-export default App;
+export default function App() {
+    return (
+        <ToastProvider>
+            <AppContent />
+        </ToastProvider>
+    );
+}

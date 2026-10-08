@@ -2,6 +2,7 @@ import type React from "react";
 import {
     LayoutDashboard,
     Box,
+    Boxes,
     Layers,
     HardDrive,
     Network,
@@ -9,7 +10,7 @@ import {
     Activity,
 } from "lucide-react";
 
-export type Page = "dashboard" | "containers" | "images" | "volumes" | "networks";
+export type Page = "dashboard" | "containers" | "compose" | "images" | "volumes" | "networks";
 
 type Props = {
     page: Page;
@@ -17,6 +18,7 @@ type Props = {
     counts: {
         containers: number;
         runningContainers: number;
+        composeStacks?: number;
         images: number;
         volumes: number;
         networks: number;
@@ -36,6 +38,12 @@ export default function Sidebar({ page, onNavigate, counts }: Props) {
             icon: <Box size={18} />,
             badge: counts.containers,
             badgeTone: counts.runningContainers > 0 ? "badge-running" : "badge-neutral",
+        },
+        {
+            id: "compose",
+            label: "Compose Stacks",
+            icon: <Boxes size={18} />,
+            badge: counts.composeStacks,
         },
         {
             id: "images",
@@ -88,7 +96,7 @@ export default function Sidebar({ page, onNavigate, counts }: Props) {
                                 <span className="nav-icon-wrap">{item.icon}</span>
                                 <span className="nav-text">{item.label}</span>
                             </div>
-                            {typeof item.badge === "number" && (
+                            {typeof item.badge === "number" && item.badge > 0 && (
                                 <span className={`nav-badge ${item.badgeTone || ""}`}>
                                     {item.badge}
                                 </span>
@@ -106,7 +114,7 @@ export default function Sidebar({ page, onNavigate, counts }: Props) {
                             <Activity size={14} className="engine-icon" />
                             <span>Docker Host</span>
                         </div>
-                        <span className="engine-live-tag">RUNNING</span>
+                        <span className="engine-live-tag">READY</span>
                     </div>
                     <div className="engine-meta">
                         <div className="engine-stat">
